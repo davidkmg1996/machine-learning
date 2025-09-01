@@ -35,6 +35,7 @@ X_train, X_test, Y_train, Y_test = train_test_split(X_scaled, y_scaled, test_siz
 
 rModel = tf.keras.Sequential([
     tf.keras.layers.Dense(64, activation='softplus', input_shape=(X_train.shape[1],)),
+    tf.keras.layers.Dropout(0.3),
     tf.keras.layers.Dense(32, activation='softplus'),
     tf.keras.layers.Dense(16, activation='softplus'),
     tf.keras.layers.Dense(8, activation='softplus'),
@@ -48,12 +49,19 @@ rModel.compile(
     metrics =["mse"]
 )
 
+early_stop = tf.keras.callbacks.EarlyStopping(
+    monitor="val_loss",
+    patience=20,
+    restore_best_weights=True
+)
+
 
 history = rModel.fit(
     X_train, Y_train,
     epochs = 200,
     validation_data = (X_test, Y_test),
-    verbose = 2
+    verbose = 2,
+    callbacks=[early_stop]
 )
 
 predS = rModel.predict(X_scaled)
@@ -76,4 +84,12 @@ sns.barplot(data=results_melted, x="Race", y="Victim Count", hue="Type")
 plt.xticks(rotation=45, ha="right")
 plt.title("Actual vs Predicted Victim Counts by Race")
 plt.tight_layout()
+plt.show()
+
+plt.plot(history.history["loss"], label="Train Loss")
+plt.plot(history.history["val_loss"], label="Val Loss")
+plt.xlabel("Epoch")
+plt.ylabel("MSE")
+plt.legend()
+plt.title("Training vs Validation Loss")
 plt.show()
