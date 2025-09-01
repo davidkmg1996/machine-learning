@@ -38,7 +38,7 @@ np.random.seed(42)
 rModel = tf.keras.Sequential([
     # tf.keras.layers.Dense(64, activation='softplus', input_shape=(X_train.shape[1],)),
     # tf.keras.layers.Dense(32, activation='softplus'),
-    tf.keras.layers.Dense(16, activation='softplus'),s
+    tf.keras.layers.Dense(16, activation='softplus'),
     tf.keras.layers.Dense(8, activation='softplus'),
     tf.keras.layers.Dense(1)
 
