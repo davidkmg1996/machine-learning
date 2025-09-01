@@ -34,15 +34,17 @@ y_scaled = scaler_Y.fit_transform(merge[["value_victim"]])
 X_train, X_test, Y_train, Y_test = train_test_split(X_scaled, y_scaled, test_size=.25, random_state=42)
 
 rModel = tf.keras.Sequential([
-    tf.keras.layers.Dense(32, activation='relu', input_shape=(X_train.shape[1],)),
-    tf.keras.layers.Dense(16, activation='relu'),
+    tf.keras.layers.Dense(64, activation='softplus', input_shape=(X_train.shape[1],)),
+    tf.keras.layers.Dense(32, activation='softplus'),
+    tf.keras.layers.Dense(16, activation='softplus'),
+    tf.keras.layers.Dense(8, activation='softplus'),
     tf.keras.layers.Dense(1)
 
 ])
 
 rModel.compile(
     loss = "mse",
-    optimizer = tf.keras.optimizers.SGD(.01),
+    optimizer = tf.keras.optimizers.Adam(.001),
     metrics =["mse"]
 )
 
