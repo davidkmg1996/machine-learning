@@ -2,7 +2,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import pathlib
 
-iPath = pathlib.Path("C:/Users/markdk01/machineL/machine-learning/imageStuff/pics/alien.png")
+iPath = pathlib.Path("pics/alien.png")
 raw = tf.io.read_file(str(iPath))
 
 iTensor = tf.image.decode_png(raw, channels=3)
