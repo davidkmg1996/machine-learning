@@ -5,24 +5,81 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+import os
+
+fPath = "stats"
+csv = {}
+offenders, victims = {}, {}
+
+for file in os.listdir(fPath):
+    if file.endswith(".csv"):
+        file_path = os.path.join(fPath, file)
+        df = pd.read_csv(file_path)
+        name = os.path.splitext(file)[0]
+        csv[name] = df
+
+        lname = name.lower()
+        if "offender" in lname:
+            offenders[name] = df
+        elif "victim" in lname:
+            victims[name] = df
+
+def normalize_name(name):
+    for suffix in ["_offender", "_victim", "_race", "_stats"]:
+        name = name.lower().replace(suffix, "")
+    return name.replace("__", "_").strip("_")
+
+# Merge matching pairs
+merged_dfs = {}
+for off_name, off_df in offenders.items():
+    off_base = normalize_name(off_name)
+    for vic_name, vic_df in victims.items():
+        vic_base = normalize_name(vic_name)
+        if off_base == vic_base:
+            print(f"Merging: {off_name} + {vic_name}")
+            merged = pd.merge(off_df, vic_df, on="key", suffixes=("_offender", "_victim"))
+            merged_dfs[off_base] = merged
+
+offenders_df_list = []
+for name, df in offenders.items():
+    temp_df = df.copy()
+    temp_df["dataset"] = name  # optional: track original CSV name
+    offenders_df_list.append(temp_df)
+
+offenders_df = pd.concat(offenders_df_list, ignore_index=True)
+
+# Convert victims dictionary to a single DataFrame
+victims_df_list = []
+for name, df in victims.items():
+    temp_df = df.copy()
+    temp_df["dataset"] = name  # optional: track original CSV name
+    victims_df_list.append(temp_df)
+
+victims_df = pd.concat(victims_df_list, ignore_index=True)
+
+offender_agg = offenders_df.groupby("key", as_index=False)["value"].sum()
+
+# Aggregate victim counts by race
+victim_agg = victims_df.groupby("key", as_index=False)["value"].sum()
+
+# Inspect
+print("Offenders DataFrame:")
+print(offenders_df.head())
+print("Victims DataFrame:")
+print(victims_df.head())
+
+# Example: inspect one merged DataFrame
+# example_key = list(merged_dfs.keys())[0]
+# print(merged_dfs[example_key].head())
+
 
 '''
 Predicting victim count by offenders based on race
 
 '''
 
-offenderStats = pd.read_csv('stats/race_offender_stats.csv')
-victimStats = pd.read_csv('stats/race_victim_stats.csv')
 
-merge = pd.merge(offenderStats, victimStats, on="key", suffixes=("_offender", "_victim"))
-
-
-X = pd.concat([
-     merge[["value_offender"]],
-     pd.get_dummies(merge["key"], prefix="race")
-
-], axis=1)
-
+merge = pd.merge(offender_agg, victim_agg, on="key", how="outer", suffixes=("_offender", "_victim"))
 
 scaler_X = StandardScaler()
 scaler_Y = StandardScaler()
@@ -59,7 +116,7 @@ rModel.compile(
 
 history = rModel.fit(
     X_train, Y_train,
-    epochs = 500,
+    epochs = 5,
     validation_data = (X_test, Y_test),
     verbose = 2
     # callbacks=[early_stop]
